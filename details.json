@@ -1,0 +1,8 @@
+{
+  "interval": "5m",
+  "prediction": "15m",
+  "coin": "ETHUSDT",
+  "start": "2022-01-01",
+  "end": "2023-02-25",
+  "label": ["Large increase", "Small increase", "No change", "Small decrease", "Large decrease"]
+}
