@@ -10,7 +10,7 @@ def create_model(layers, activation: list,loss= 'categorical_crossentropy'  , op
     model = Sequential()
     for i, nodes in enumerate(layers):
         if i == 0:
-            model.add(Dense(nodes, input_shape=(20,), activation=activation[0]))
+            model.add(Dense(nodes, input_shape=(10,), activation=activation[0]))
         else:
             model.add(Dense(nodes, activation=activation[i]))
     model.compile(optimizer=optimizer, loss= loss, metrics=['accuracy'])
