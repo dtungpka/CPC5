@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import time
 import threading
 details = json.loads(open("details.json", "r").read())
-
+current_coin = ""
 # sample url: https://data.binance.vision/data/futures/um/daily/klines/DOGEUSDT/5m/DOGEUSDT-5m-2023-02-25.zip
 
 
@@ -24,12 +24,16 @@ def get_csv(url):
     """Downloads a csv file from a given url, unzip it, return path to csv and path to zip"""
     if not os.path.exists("data"):
         os.mkdir("data")
-    if not os.path.exists("data/zip"):
-        os.mkdir("data/zip")
-    if not os.path.exists("data/csv"):
-        os.mkdir("data/csv")
-    zip_path = "data/zip/" + url.split("/")[-1]
-    csv_path = "data/csv/" + url.split("/")[-1].replace(".zip", ".csv")
+    if not os.path.exists("downloaded"):
+        os.mkdir("downloaded")
+    if not os.path.exists("data/"+current_coin):
+        os.mkdir("data/"+current_coin)
+    if not os.path.exists("data/"+current_coin+"/zip"):
+        os.mkdir("data/"+current_coin+"/zip")
+    if not os.path.exists("data/"+current_coin+"/csv"):
+        os.mkdir("data/"+current_coin+"/csv")
+    zip_path = "data/"+current_coin+"/zip/" + url.split("/")[-1]
+    csv_path = "data/"+current_coin+"/csv/" + url.split("/")[-1].replace(".zip", ".csv")
     if not os.path.exists(csv_path):
         try:
             r = requests.get(url)
@@ -37,7 +41,7 @@ def get_csv(url):
             return None, None
         with open(zip_path, "wb") as f:
             f.write(r.content)
-        shutil.unpack_archive(zip_path, "data/csv")
+        shutil.unpack_archive(zip_path, "data/"+current_coin+"/csv")
 
     return csv_path, zip_path
 
@@ -52,7 +56,7 @@ def get_date_range(start, end):
 def get_data(coin: str, interval:str, start, end,process_ID=0,output="data.csv"):
     """Continuously downloads data from binance data api, writes to csv file"""
     global process_bars
-    output = coin + "_" + interval + "_" + output
+    output = "downloaded/"+coin + "_" + interval + "_" + output
     date_count = datetime.datetime.strptime(end, "%Y-%m-%d") - datetime.datetime.strptime(start, "%Y-%m-%d")
     for date in get_date_range(start, end):
         url = f"https://data.binance.vision/data/futures/um/daily/klines/{coin}/{interval}/{coin}-{interval}-{date}.zip"
@@ -74,9 +78,9 @@ def get_data(coin: str, interval:str, start, end,process_ID=0,output="data.csv")
                 
 
 
-if __name__ == "__main__":
-    args1 = (details["coin"], details["interval"], details["start"], details["end"],0)
-    args2 = (details["coin"], details["prediction"], details["start"], details["end"],1)
+def download_data():
+    args1 = (current_coin, details["interval"], details["start"], details["end"],0)
+    args2 = (current_coin, details["prediction"], details["start"], details["end"],1)
     thr1 = threading.Thread(target=get_data, args=args1)
     thr2 = threading.Thread(target=get_data, args=args2)
     thr1.start()
@@ -106,7 +110,7 @@ if __name__ == "__main__":
     #loop through files csv, check if they are empty or not exist, print error
     empty = 0
     for date in get_date_range(details["start"], details["end"]):
-        csv_path = "data/csv/" + details["coin"] + "-" + details["interval"] + "-" + date + ".csv"
+        csv_path = "data/"+current_coin+"/csv/" + current_coin + "-" + details["interval"] + "-" + date + ".csv"
         if not os.path.exists(csv_path):
             print("Error: ",csv_path," does not exist")
             empty
@@ -116,7 +120,7 @@ if __name__ == "__main__":
                 print("Error: ",csv_path," is empty")
                 empty += 1
     for date in get_date_range(details["start"], details["end"]):
-        csv_path = "data/csv/" + details["coin"] + "-" + details["prediction"] + "-" + date + ".csv"
+        csv_path = "data/"+current_coin+"/csv/" + current_coin + "-" + details["prediction"] + "-" + date + ".csv"
         if not os.path.exists(csv_path):
             print("Error: ",csv_path," does not exist")
             empty
@@ -126,7 +130,32 @@ if __name__ == "__main__":
                 print("Error: ",csv_path," is empty")
                 empty += 1
     if empty == 0:
-        print("\nData downloaded successfully")
+        print("\nData downloaded successfully\n")
+
+if __name__ == "__main__":
+    coins = []
+    with open("coins.txt",'r+') as f:
+        for line in f:
+            coins.append(line.strip().replace(" ",""))
+    to_write = coins.copy()
+    
+    for i in range(len(coins)):
+        f = open("coins.txt",'w+')
+        current_coin = coins[i]
+        print("Downloading data for",current_coin)
+        download_data()
+    #check for [coin]_5m_data.csv and [coin]_15m_data.csv in downloaded folder and delete it from coins.txt
+        for file in os.listdir("downloaded"):
+            if file.endswith("_5m_data.csv") or file.endswith("_15m_data.csv"):
+                to_write.remove(file.split("_")[0])
+        #write coins to coins.txt
+        for coin in to_write:
+            f.write(coin + "\n")
+            f.flush()
+        f.close()
+        
+
+        
 
     
 
