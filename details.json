@@ -1,8 +1,8 @@
 {
   "interval": "5m",
   "prediction": "15m",
-  "coin": "GRTUSDT",
+  "coin": "BTCUSDT",
   "start": "2022-01-01",
   "end": "2023-02-25",
-  "label": ["Large decrease", "Small decrease", "No change", "Small increase", "Large increase"]
+  "label": ["Small increase", "Small decrease", "Large increase", "Large decrease", "No change"]
 }
