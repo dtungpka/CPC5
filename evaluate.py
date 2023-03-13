@@ -30,7 +30,8 @@ for json_file in read_json_file():
         acc.sort( reverse=True)
         #create a plot, set the title and labels, display the point values
         plt.plot(acc)
-        plt.title(history['coin'] + " loss")
+        title = history['coin'] + " loss," + "with " + str(len(history['history'])) + " features combination"
+        plt.title(title)
 
         plt.show()
         

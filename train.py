@@ -18,29 +18,29 @@ FEATURE = ['OPEN', 'HIGH', 'LOW', 'CLOSE'
 BOIL = ['BOILINGER_UP','BOILINGER_DOWN']
 FIBO = ['FIBO0','FIBO1','FIBO2','FIBO3','FIBO4']
 def get_combination(min_len):
-    combination = []
-    for i in range(min_len,len(FEATURES)):
-        for c in itertools.combinations(FEATURES,i):
-            combination.append(c)
-    #shuffle the combination
-    random.shuffle(combination)
-    #trim the combination
-    combination = combination[:20]
-    combination.append(FEATURES)
-    #if BOIL in combination: remove BOIL and add BOIL_UP and BOIL_DOWN
-    for i in range(len(combination)):
-        if 'BOIL' in combination[i]:
-            combination[i] = list(combination[i])
-            combination[i].remove('BOIL')
-            combination[i].extend(BOIL)
-    #if FIBO in combination: remove FIBO and add FIBO0, FIBO1, FIBO2, FIBO3, FIBO4
-    for i in range(len(combination)):
-        if 'FIBO' in combination[i]:
-            combination[i] = list(combination[i])
-            combination[i].remove('FIBO')
-            combination[i].extend(FIBO)
+    # combination = []
+    # for i in range(min_len,len(FEATURES)):
+    #     for c in itertools.combinations(FEATURES,i):
+    #         combination.append(c)
+    # #shuffle the combination
+    # random.shuffle(combination)
+    # #trim the combination
+    # combination = combination[:20]
+    # combination.append(FEATURES)
+    # #if BOIL in combination: remove BOIL and add BOIL_UP and BOIL_DOWN
+    # for i in range(len(combination)):
+    #     if 'BOIL' in combination[i]:
+    #         combination[i] = list(combination[i])
+    #         combination[i].remove('BOIL')
+    #         combination[i].extend(BOIL)
+    # #if FIBO in combination: remove FIBO and add FIBO0, FIBO1, FIBO2, FIBO3, FIBO4
+    # for i in range(len(combination)):
+    #     if 'FIBO' in combination[i]:
+    #         combination[i] = list(combination[i])
+    #         combination[i].remove('FIBO')
+    #         combination[i].extend(FIBO)
 
-    return combination
+    return [['VOLUME', 'EMA', 'BOILINGER_UP', 'BOILINGER_DOWN', 'OBV', 'ADX', 'FIBO0', 'FIBO1', 'FIBO2', 'FIBO3']]
 
 class KNearestNeighbor():
     def __init__(self):
@@ -60,7 +60,18 @@ class KNearestNeighbor():
         num_test = len(y_test.flatten())
         num_correct = np.sum(y_test_pred.flatten() == y_test.flatten())
         accuracy = float(num_correct) / num_test
-        if isprint: print('Got %d / %d correct => accuracy: %f' % (num_correct, num_test, accuracy))
+        if isprint:
+            print('Got %d / %d correct => accuracy: %f' % (num_correct, num_test, accuracy))
+            #print the TP, TN, FP, FN
+            #loop and calcluate with each label
+            for i in range(5):
+                TP = np.sum((y_test_pred == i) & (y_test == i))
+                TN = np.sum((y_test_pred != i) & (y_test != i))
+                FP = np.sum((y_test_pred == i) & (y_test != i))
+                FN = np.sum((y_test_pred != i) & (y_test == i))
+                print('label %d: TP %d, TN %d, FP %d, FN %d' % (i, TP, TN, FP, FN))
+
+            
         return accuracy
 def compute_distances_no_loop(X_train, X_test):
     result_mtx = np.sqrt(np.sum(X_test**2, axis=1, keepdims=True) + np.sum(X_train**2, axis=1) - 2 * X_test.dot(X_train.T))
@@ -240,15 +251,23 @@ class KNN:
         X = X[1:int(l*ratio)]
         Y = Y[1:int(l*ratio)]
         #Validation set is the rest of the data
-        X_val = X[int(l*ratio):]
-        Y_val = Y[int(l*ratio):]
+        #self.X_val = X[int(l*ratio):]
+        #self.Y_val = Y[int(l*ratio):]
         X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
         classifier = KNearestNeighbor()
         classifier.train(X_train, y_train)
         num_test = X_test.shape[0]
         dists_no = compute_distances_no_loop(X_train, X_test)
         y_pred = predict_labels(y_train, dists_no,num_test, k=1)
-        return classifier.evaluate(y_pred, y_test)
+        print("Test Accuracy: ")
+        acc = classifier.evaluate(y_pred, y_test)
+
+        #the validation set is the rest of the data
+        #print("Validation Accuracy: ")
+        #dists_no = compute_distances_no_loop(X_train, self.X_val)
+        #y_pred = predict_labels(y_train, dists_no,self.X_val.shape[0], k=1)
+        #acc_val = classifier.evaluate(y_pred, self.Y_val)
+        return 
     def update_history(self):
         #make a new directory for the coin
         if not os.path.exists("history"):
@@ -274,6 +293,9 @@ class KNN:
                 self.history.append(setup)
                 self.update_history()
                 print(setup)
+       
+        
+
 
 
 if __name__ == '__main__':

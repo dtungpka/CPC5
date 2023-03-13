@@ -4,5 +4,5 @@
   "coin": "BTCUSDT",
   "start": "2022-01-01",
   "end": "2023-02-25",
-  "label": ["Small increase", "Small decrease", "Large increase", "Large decrease", "No change"]
+  "label": [ "Small decrease", "Small increase","No change","Large increase","Large decrease" ]
 }
